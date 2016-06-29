@@ -32,8 +32,12 @@ import com.google.api.client.http.InputStreamContent;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import javafx.util.Pair;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import static java.nio.file.StandardCopyOption.*;
 
 public class GoogleDrive {
+	/** ANSI code. */
 	public static final String ANSI_BOLD = "\u001B[1m";
 	public static final String ANSI_RESET = "\u001B[0m";
 	public static final String ANSI_BLACK = "\u001B[30m";
@@ -44,6 +48,10 @@ public class GoogleDrive {
 	public static final String ANSI_PURPLE = "\u001B[35m";
 	public static final String ANSI_CYAN = "\u001B[36m";
 	public static final String ANSI_WHITE = "\u001B[37m";
+
+	/** DOWNLOADS_PATH, where you want to save the downloaded files in. */
+	private static final String DOWNLOADS_PATH = "/Users/Ryan7WU/Downloads/";
+
 	/** Application name. */
 	private static final String APPLICATION_NAME =
 		"Drive API Java Quickstart";
@@ -119,32 +127,38 @@ public class GoogleDrive {
 				.build();
 	}
 
-	static void updateProgress(double progress) {
+	static void updateProgress(double progress, long size) {
+		System.out.print(ANSI_BOLD + ANSI_BLUE);
 		int percentage = (int)Math.round(progress * 100);
 		final int width = 50; // progress bar width in chars
-		StringBuilder bar = new StringBuilder(ANSI_BOLD + ANSI_BLUE + "\r[");
+		StringBuilder progressBar = new StringBuilder("[");
 		for(int i = 0; i < width; i++){
 			if( i < (percentage/2)){
-				bar.append('=');
+				progressBar.append('=');
 			} else if( i == (percentage/2)){
-				bar.append('>');
+				progressBar.append('>');
 			} else {
-				bar.append('-');
+				progressBar.append('-');
 			}
 		}
-		bar.append(']');
-		System.out.printf("%s  %.2f%%", bar.toString(), progress * 100, ANSI_RESET);
+		progressBar.append(']');
+		System.out.printf("\r%s  %.2f%%", progressBar.toString(), progress * 100);
+		System.out.printf(ANSI_GREEN + "  %.2f/%.2fMB" + ANSI_RESET, (double)progress*size/1024/1024, (double)size/1024/1024);
 	}
 
-	private static void downloadFile(Drive drive, String fileId, String fileName) throws IOException {
+	private static void downloadFile(Drive drive, File file) throws IOException {
+		String fileName = file.getName();
+		String fileId = file.getId();
+		long size = file.getSize();
+
 		class CustomProgressListener implements MediaHttpDownloaderProgressListener {
 			public void progressChanged(MediaHttpDownloader downloader) {
 				switch (downloader.getDownloadState()) {
 					case MEDIA_IN_PROGRESS:
-						updateProgress(downloader.getProgress());
+						updateProgress(downloader.getProgress(), size);
 						break;
 					case MEDIA_COMPLETE:
-						updateProgress(downloader.getProgress());
+						updateProgress(downloader.getProgress(), size);
 						System.out.println(ANSI_BOLD + ANSI_BLUE + "\n==>" + ANSI_GREEN + " Download is complete!" + ANSI_RESET);
 						//System.out.println("Download is complete!");
 				}
@@ -157,9 +171,13 @@ public class GoogleDrive {
 
 		request.getMediaHttpDownloader().setProgressListener(new CustomProgressListener());
 		request.executeMediaAndDownloadTo(out);
+
+		Files.move(Paths.get(fileName), Paths.get(DOWNLOADS_PATH + fileName), ATOMIC_MOVE);
 	}
 
 	private static void uploadFile(Drive drive, String fileName) throws IOException {
+		// File's content.
+		java.io.File mediaFile = new java.io.File(fileName);
 		class CustomProgressListener implements MediaHttpUploaderProgressListener {
 			public void progressChanged(MediaHttpUploader uploader) throws IOException {
 				switch (uploader.getUploadState()) {
@@ -171,10 +189,10 @@ public class GoogleDrive {
 						//System.out.println("Initiation is complete!");
 						break;
 					case MEDIA_IN_PROGRESS:
-						updateProgress(uploader.getProgress());
+						updateProgress(uploader.getProgress(), mediaFile.length());
 						break;
 					case MEDIA_COMPLETE:
-						updateProgress(uploader.getProgress());
+						updateProgress(uploader.getProgress(), mediaFile.length());
 						System.out.println(ANSI_BOLD + ANSI_BLUE + "\n==>" + ANSI_GREEN + " Upload is complete!" + ANSI_RESET);
 						//System.out.println("Upload is complete!");
 				}
@@ -184,11 +202,7 @@ public class GoogleDrive {
 		// File's metadata.
 		File fileMetadata = new File();
 		fileMetadata.setName(fileName);
-		//fileMetadata.setDescription(description);
-		//fileMetadata.setMimeType(mimeType);
 
-		// File's content.
-		java.io.File mediaFile = new java.io.File(fileName);
 		InputStreamContent mediaContent =
 			new InputStreamContent(null,
 				new BufferedInputStream(new FileInputStream(mediaFile)));
@@ -205,12 +219,9 @@ public class GoogleDrive {
 		}
 	}
 
-	private static void deleteFile(Drive drive, String fileId) {
-		try {
-			drive.files().delete(fileId).execute();
-		} catch (IOException e) {
-			System.out.println("An error occurred: " + e);
-		}
+	private static void deleteFile(Drive drive, File file) throws IOException {
+		//String fileId = file.getId();
+		drive.files().delete(file.getId()).execute();
 	}
 
 	private static List<File> listFiles(Drive drive) throws IOException {
@@ -223,16 +234,15 @@ public class GoogleDrive {
 		if (files == null || files.size() == 0) {
 			System.out.println("No files found.");
 		} else {
-			System.out.println("Files:");
+			System.out.println(ANSI_BOLD + ANSI_BLUE + "==> Files:" + ANSI_RESET);
 			for (File file : files) {
 				//Hide folders
 				if(!file.getMimeType().equals("application/vnd.google-apps.folder")) {
-					System.out.printf(String.format("%-32s", file.getMd5Checksum()));
-					System.out.print(' ');
+					System.out.printf(String.format(ANSI_BOLD + "%s" + ANSI_RESET, file.getMd5Checksum()));
 					if (file.getSize() != null) {
-						System.out.printf("%4sM\t", file.getSize()/1024/1024);
+						System.out.printf(" %4sM ", file.getSize()/1024/1024);
 					} else {
-						System.out.printf("(null)\t");
+						System.out.printf(" (null) ");
 					}
 					String fileName = file.getName();
 					if (fileName.length() < 45) {
@@ -248,40 +258,50 @@ public class GoogleDrive {
 		return files;
 	}
 
-	private static Pair<String,String> md5ToFileIdAndFileName(List<File> files, String md5Checksum) {
+	private static File md5ToFile(List<File> files, String md5Checksum) {
 		String fileId = new String();
 		String fileName = new String();
 		for (File file : files) {
 			if(file.getMd5Checksum() != null && file.getMd5Checksum().equals(md5Checksum)) {
-				fileId = file.getId();
-				fileName = file.getName();
+				return file;
 			}
 		}
-		return new Pair<>(fileId, fileName);
+		return null;
+	}
+
+	private static void printAbout(Drive drive) throws IOException, NullPointerException {
+		System.out.println(ANSI_BOLD + ANSI_BLUE);
+		About about = drive.about().get()
+			.setFields("storageQuota")
+			.execute();
+
+		About.StorageQuota aStorageQuota = about.getStorageQuota();
+		System.out.printf("Quota: %.1f/%.1fGB" + ANSI_RESET + '\n', (double)aStorageQuota.getUsage()/1024/1024/1024, (double)aStorageQuota.getLimit()/1024/1024/1024);
 	}
 
 	public static void main(String[] args) throws IOException {
 		// Build a new authorized API client service.
 		Drive drive = getDriveService();
+		printAbout(drive);
 		//Upload
 		if (args.length == 1 && !args[0].equals("-r")) {
 			uploadFile(drive, args[0]);
 		} else {
 			List<File> files = listFiles(drive);
 			Scanner scanner = new Scanner(System.in);
-			if (args.length == 0) {
-				//Download
-				System.out.println("Enter MD5 to download: ");
-				String md5Checksum = scanner.next();
-				Pair<String,String> fileNameAndFileId = md5ToFileIdAndFileName(files, md5Checksum);
-				downloadFile(drive, fileNameAndFileId.getKey(), fileNameAndFileId.getValue());
-			} else {
-				while(true) {
-					//Remove
-					System.out.println("Enter MD5 to remove file: ");
+			while(true) {
+				if (args.length == 0) {
+					//Download
+					System.out.println(ANSI_BOLD + ANSI_BLUE + "==> Enter MD5 to download (Ctrl-C to exit): " + ANSI_RESET);
 					String md5Checksum = scanner.next();
-					Pair<String,String> fileNameAndFileId = md5ToFileIdAndFileName(files, md5Checksum);
-					deleteFile(drive, fileNameAndFileId.getKey());
+					File file = md5ToFile(files, md5Checksum);
+					downloadFile(drive, file);
+				} else {
+					//Remove
+					System.out.println(ANSI_BOLD + ANSI_BLUE + "==> Enter MD5 to remove file (Ctrl-C to exit): " + ANSI_RESET);
+					String md5Checksum = scanner.next();
+					File file = md5ToFile(files, md5Checksum);
+					deleteFile(drive, file);
 				}
 			}
 		}

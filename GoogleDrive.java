@@ -36,7 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import static java.nio.file.StandardCopyOption.*;
 
-public class GoogleDrive {
+public class GoogleDriveAPI {
 	/** ANSI code. */
 	public static final String ANSI_BOLD = "\u001B[1m";
 	public static final String ANSI_RESET = "\u001B[0m";
@@ -54,11 +54,11 @@ public class GoogleDrive {
 
 	/** Application name. */
 	private static final String APPLICATION_NAME =
-		"Drive API Java Quickstart";
+		"Google Drive API";
 
 	/** Directory to store user credentials for this application. */
 	private static final java.io.File DATA_STORE_DIR = new java.io.File(
-		System.getProperty("user.home"), ".credentials/drive-java-quickstart.json");
+		System.getProperty("user.home"), ".credentials/google-drive-api.json");
 
 	/** Global instance of the {@link FileDataStoreFactory}. */
 	private static FileDataStoreFactory DATA_STORE_FACTORY;

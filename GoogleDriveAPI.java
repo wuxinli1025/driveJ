@@ -31,7 +31,6 @@ import com.google.api.client.googleapis.media.MediaHttpUploaderProgressListener;
 import com.google.api.client.http.InputStreamContent;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
-import javafx.util.Pair;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import static java.nio.file.StandardCopyOption.*;
@@ -96,7 +95,7 @@ public class GoogleDriveAPI {
 	public static Credential authorize() throws IOException {
 		// Load client secrets.
 		InputStream in =
-			GoogleDrive.class.getResourceAsStream("/client_secret.json");
+			GoogleDriveAPI.class.getResourceAsStream("/client_secret.json");
 		GoogleClientSecrets clientSecrets =
 			GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 

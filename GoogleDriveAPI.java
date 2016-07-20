@@ -34,6 +34,7 @@ import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import static java.nio.file.StandardCopyOption.*;
+import java.util.ArrayList;
 
 public class GoogleDriveAPI {
 	/** ANSI code. */
@@ -127,22 +128,37 @@ public class GoogleDriveAPI {
 	}
 
 	static void updateProgress(double progress, long size) {
-		System.out.print(ANSI_BOLD + ANSI_BLUE);
+		System.out.print(ANSI_BOLD);
 		int percentage = (int)Math.round(progress * 100);
 		final int width = 50; // progress bar width in chars
-		StringBuilder progressBar = new StringBuilder("[");
+		StringBuilder progressBar = new StringBuilder("╢");
 		for(int i = 0; i < width; i++){
-			if( i < (percentage/2)){
-				progressBar.append('=');
+			if( i <= (percentage/2)){
+				progressBar.append('█');
 			} else if( i == (percentage/2)){
-				progressBar.append('>');
+				progressBar.append('▓');
 			} else {
-				progressBar.append('-');
+				progressBar.append('░');
 			}
 		}
-		progressBar.append(']');
+		progressBar.append('╟');
 		System.out.printf("\r%s  %.2f%%", progressBar.toString(), progress * 100);
-		System.out.printf(ANSI_GREEN + "  %.2f/%.2fMB" + ANSI_RESET, (double)progress*size/1024/1024, (double)size/1024/1024);
+		System.out.printf(ANSI_GREEN + "  %.2f/%.2fMB " + ANSI_RESET, (double)progress*size/1024/1024, (double)size/1024/1024);
+		
+		
+		/*for (int i = 0; true ; i++ ) {
+			if (i%4 == 0) System.out.print('▄');
+			if (i%4 == 1) System.out.print('▌');
+			if (i%4 == 2) System.out.print('▀');
+			if (i%4 == 3) System.out.print('▐');
+			System.out.print('\b');
+			System.out.flush();
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException ie) {
+				ie.printStackTrace();
+			}
+		}*/
 	}
 
 	private static void downloadFile(Drive drive, File file) throws IOException {
@@ -218,9 +234,11 @@ public class GoogleDriveAPI {
 		}
 	}
 
-	private static void deleteFile(Drive drive, File file) throws IOException {
+	private static void deleteFile(Drive drive, List<File> files) throws IOException {
 		//String fileId = file.getId();
-		drive.files().delete(file.getId()).execute();
+		for (File file : files) {
+			drive.files().delete(file.getId()).execute();
+		}
 	}
 
 	private static List<File> listFiles(Drive drive) throws IOException {
@@ -268,6 +286,18 @@ public class GoogleDriveAPI {
 		return null;
 	}
 
+	private static List<File> md5ToFileList(List<File> files, String md5Checksum) {
+		String fileId = new String();
+		String fileName = new String();
+		List<File> delFileList = new ArrayList<File>();
+		for (File file : files) {
+			if(file.getMd5Checksum() != null && file.getMd5Checksum().equals(md5Checksum)) {
+				delFileList.add(file);
+			}
+		}
+		return delFileList;
+	}	
+
 	private static void printAbout(Drive drive) throws IOException, NullPointerException {
 		System.out.println(ANSI_BOLD + ANSI_BLUE);
 		About about = drive.about().get()
@@ -297,10 +327,10 @@ public class GoogleDriveAPI {
 					downloadFile(drive, file);
 				} else {
 					//Remove
-					System.out.println(ANSI_BOLD + ANSI_BLUE + "==> Enter MD5 to remove file (Ctrl-C to exit): " + ANSI_RESET);
+					System.out.println(ANSI_BOLD + ANSI_BLUE + "==> Enter MD5 to " + ANSI_RED + "REMOVE " + ANSI_BLUE + "file (Ctrl-C to exit): " + ANSI_RESET);
 					String md5Checksum = scanner.next();
-					File file = md5ToFile(files, md5Checksum);
-					deleteFile(drive, file);
+					List<File> delFileList = md5ToFileList(files, md5Checksum);
+					deleteFile(drive, delFileList);
 				}
 			}
 		}

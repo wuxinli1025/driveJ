@@ -253,7 +253,7 @@ public class GoogleDriveAPI {
 		if (files == null || files.size() == 0) {
 			System.out.println("No files found.");
 		} else {
-			System.out.println(ANSI_BOLD + ANSI_BLUE + "==> Files:" + ANSI_RESET);
+			System.out.println(ANSI_BOLD + ANSI_BLUE + "==> First 10 items:" + ANSI_RESET);
 			for (File file : files) {
 				//Hide folders
 				if(!file.getMimeType().equals("application/vnd.google-apps.folder")) {
@@ -301,8 +301,6 @@ public class GoogleDriveAPI {
 	}
 
 	private static List<File> md5sToFileList(List<File> files, String md5From, String md5To) {
-		String fileId = new String();
-		String fileName = new String();
 		List<File> fileList = new ArrayList<File>();
 		Boolean flag = false, foundTo = false;
 		for (File file : files) {
@@ -317,6 +315,20 @@ public class GoogleDriveAPI {
 		}
 		if(!foundTo) {
 			fileList = md5sToFileList(files, md5To, md5From);
+		}
+		return fileList;
+	}
+
+	private static List<File> md5Preprocessor(List<File> files, String input) {
+		List<String> md5s1 = Arrays.asList(input.split(" "));	//stage 1, split it by space
+		List<File> fileList = new ArrayList<File>();
+		for (String md5s2 : md5s1) {	//stage 1, make sure every item is s single md5 value
+			if (!md5s2.contains("-")) {	//not a range
+				fileList.addAll(md5sToFileList(files, md5s2, md5s2));
+			} else {
+				String[] md5s = md5s2.split("-");
+				fileList.addAll(md5sToFileList(files, md5s[0], md5s[1]));
+			}
 		}
 		return fileList;
 	}
@@ -344,19 +356,16 @@ public class GoogleDriveAPI {
 			while(true) {
 				if (args.length == 0) {
 					//Download
-					System.out.println(ANSI_BOLD + ANSI_BLUE + "==> Enter MD5(s) to download ('md5 md5' specifies a range): " + ANSI_RESET);
+					System.out.println(ANSI_BOLD + ANSI_BLUE + "==> Enter MD5(s) to download ('md5 ... md5-md5' specifies a range): " + ANSI_RESET);
 					String md5Checksum = scanner.nextLine();
-					if(!md5Checksum.contains(" ")) {
-						md5Checksum += " " + md5Checksum;
-					}
-					String[] md5s = md5Checksum.split(" ");
-					List<File> dowFileList = md5sToFileList(files, md5s[0], md5s[1]);
+					List<File> dowFileList = md5Preprocessor(files, md5Checksum);
 					downloadFiles(drive, dowFileList);
 				} else {
 					//Remove
 					System.out.println(ANSI_BOLD + ANSI_BLUE + "==> Enter MD5 to " + ANSI_RED + "REMOVE " + ANSI_BLUE + "file (Ctrl-C to exit): " + ANSI_RESET);
 					String md5Checksum = scanner.next();
-					List<File> delFileList = md5ToFileList(files, md5Checksum);
+					List<File> delFileList = md5Preprocessor(files, md5Checksum);
+					//List<File> delFileList = md5ToFileList(files, md5Checksum);
 					deleteFiles(drive, delFileList);
 				}
 			}

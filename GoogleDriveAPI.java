@@ -367,8 +367,8 @@ public class GoogleDriveAPI {
 					List<File> delFileList = md5Preprocessor(files, md5Checksum);
 					//List<File> delFileList = md5ToFileList(files, md5Checksum);
 					deleteFiles(drive, delFileList);
+					//another function
 				}
-				//what will happen if I
 			}
 		}
 	}

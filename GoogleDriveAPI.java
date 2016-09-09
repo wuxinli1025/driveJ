@@ -320,9 +320,9 @@ public class GoogleDriveAPI {
 	}
 
 	private static List<File> md5Preprocessor(List<File> files, String input) {
-		List<String> md5s1 = Arrays.asList(input.split(" "));	//stage 1, split it by space
+		List<String> md5s1 = Arrays.asList(input.split(" "));
 		List<File> fileList = new ArrayList<File>();
-		for (String md5s2 : md5s1) {	//stage 1, make sure every item is s single md5 value
+		for (String md5s2 : md5s1) {
 			if (!md5s2.contains("-")) {	//not a range
 				fileList.addAll(md5sToFileList(files, md5s2, md5s2));
 			} else {
@@ -367,7 +367,6 @@ public class GoogleDriveAPI {
 					List<File> delFileList = md5Preprocessor(files, md5Checksum);
 					//List<File> delFileList = md5ToFileList(files, md5Checksum);
 					deleteFiles(drive, delFileList);
-					//another function
 				}
 			}
 		}

@@ -31,3 +31,7 @@ run{
         args(arg.split(','))
     }
 }
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.1'
+}

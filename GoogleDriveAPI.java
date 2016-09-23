@@ -1,3 +1,8 @@
+/**
+ * Created by Ryan7WU on 9/23/16.
+ */
+package com.google.drive.api;
+
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -5,36 +10,29 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
-
+import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.*;
-import com.google.api.services.drive.Drive;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.List;
-
-import java.util.Scanner;
 import java.io.OutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
-import java.util.NoSuchElementException;
-import com.google.api.client.googleapis.media.MediaHttpDownloader;
-import com.google.api.client.googleapis.media.MediaHttpDownloaderProgressListener;
-import com.google.api.client.googleapis.media.MediaHttpUploader;
-import com.google.api.client.googleapis.media.MediaHttpUploaderProgressListener;
-import com.google.api.client.http.InputStreamContent;
-import java.io.BufferedInputStream;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import static java.nio.file.StandardCopyOption.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Scanner;
+
+import static java.nio.file.StandardCopyOption.*;
 
 public class GoogleDriveAPI {
 	/** ANSI code. */
@@ -50,7 +48,7 @@ public class GoogleDriveAPI {
 	public static final String ANSI_WHITE = "\u001B[37m";
 
 	/** DOWNLOADS_PATH, where you want to save the downloaded files in. */
-	private static final String DOWNLOADS_PATH = "/Users/Ryan7WU/Downloads/";
+	private static final String DOWNLOADS_PATH = Global.DOWNLOADS_PATH;
 
 	/** Application name. */
 	private static final String APPLICATION_NAME =
@@ -59,17 +57,9 @@ public class GoogleDriveAPI {
 	/** Directory to store user credentials for this application. */
 	private static final java.io.File DATA_STORE_DIR = new java.io.File(
 		System.getProperty("user.home"), ".credentials/google-drive-api.json");
-
-	/** Global instance of the {@link FileDataStoreFactory}. */
-	private static FileDataStoreFactory DATA_STORE_FACTORY;
-
 	/** Global instance of the JSON factory. */
 	private static final JsonFactory JSON_FACTORY =
 		JacksonFactory.getDefaultInstance();
-
-	/** Global instance of the HTTP transport. */
-	private static HttpTransport HTTP_TRANSPORT;
-
 	/** Global instance of the scopes required by this quickstart.
 	 *
 	 * If modifying these scopes, delete your previously saved credentials
@@ -77,6 +67,10 @@ public class GoogleDriveAPI {
 	 */
 	private static final List<String> SCOPES =
 		Arrays.asList(DriveScopes.DRIVE);
+	/** Global instance of the {@link FileDataStoreFactory}. */
+	private static FileDataStoreFactory DATA_STORE_FACTORY;
+	/** Global instance of the HTTP transport. */
+	private static HttpTransport HTTP_TRANSPORT;
 
 	static {
 		try {
@@ -109,8 +103,7 @@ public class GoogleDriveAPI {
 				.build();
 		Credential credential = new AuthorizationCodeInstalledApp(
 			flow, new LocalServerReceiver()).authorize("user");
-		System.out.println(
-				"Credentials saved to " + DATA_STORE_DIR.getAbsolutePath());
+		//System.out.println("Credentials saved to " + DATA_STORE_DIR.getAbsolutePath());
 		return credential;
 	}
 
@@ -127,65 +120,17 @@ public class GoogleDriveAPI {
 				.build();
 	}
 
-	static void updateProgress(double progress, long size) {
-		System.out.print(ANSI_BOLD);
-		int percentage = (int)Math.round(progress * 100);
-		final int width = 50; // progress bar width in chars
-		StringBuilder progressBar = new StringBuilder("╢");
-		for(int i = 0; i < width; i++){
-			if( i <= (percentage/2)){
-				progressBar.append('█');
-			} else if( i == (percentage/2)){
-				progressBar.append('▓');
-			} else {
-				progressBar.append('░');
-			}
-		}
-		progressBar.append('╟');
-		System.out.printf("\r%s  %.2f%%", progressBar.toString(), progress * 100);
-		System.out.printf(ANSI_GREEN + "  %.2f/%.2fMB " + ANSI_RESET, (double)progress*size/1024/1024, (double)size/1024/1024);
-		
-		
-		/*for (int i = 0; true ; i++ ) {
-			if (i%4 == 0) System.out.print('▄');
-			if (i%4 == 1) System.out.print('▌');
-			if (i%4 == 2) System.out.print('▀');
-			if (i%4 == 3) System.out.print('▐');
-			System.out.print('\b');
-			System.out.flush();
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException ie) {
-				ie.printStackTrace();
-			}
-		}*/
-	}
-
 	private static void downloadFiles(Drive drive, List<File> files) throws IOException {
 		for (File file : files) {
 			String fileName = file.getName();
 			String fileId = file.getId();
 			long size = file.getSize();
 
-			class CustomProgressListener implements MediaHttpDownloaderProgressListener {
-				public void progressChanged(MediaHttpDownloader downloader) {
-					switch (downloader.getDownloadState()) {
-						case MEDIA_IN_PROGRESS:
-							updateProgress(downloader.getProgress(), size);
-							break;
-						case MEDIA_COMPLETE:
-							updateProgress(downloader.getProgress(), size);
-							System.out.println(ANSI_BOLD + ANSI_BLUE + "\n==>" + ANSI_GREEN + " Download is complete!" + ANSI_RESET);
-							//System.out.println("Download is complete!");
-					}
-				}
-			}
-
 			OutputStream out = new FileOutputStream(fileName);
 			Drive.Files.Get request = drive.files().get(fileId);
 			System.out.println(ANSI_BOLD + ANSI_BLUE + "==> " + ANSI_BLACK + "Downloading " + fileName + ANSI_RESET);
 
-			request.getMediaHttpDownloader().setProgressListener(new CustomProgressListener());
+			request.getMediaHttpDownloader().setProgressListener(new FileDownloadProgressListener(size));
 			request.executeMediaAndDownloadTo(out);
 
 			Files.move(Paths.get(fileName), Paths.get(DOWNLOADS_PATH + fileName), ATOMIC_MOVE);
@@ -195,26 +140,6 @@ public class GoogleDriveAPI {
 	private static void uploadFile(Drive drive, String fileName) throws IOException {
 		// File's content.
 		java.io.File mediaFile = new java.io.File(fileName);
-		class CustomProgressListener implements MediaHttpUploaderProgressListener {
-			public void progressChanged(MediaHttpUploader uploader) throws IOException {
-				switch (uploader.getUploadState()) {
-					case INITIATION_STARTED:
-						//System.out.println("Initiation has started!");
-						break;
-					case INITIATION_COMPLETE:
-						System.out.println(ANSI_BOLD + ANSI_BLUE + "==> " + ANSI_BLACK + "Uploading " + fileName + ANSI_RESET);
-						//System.out.println("Initiation is complete!");
-						break;
-					case MEDIA_IN_PROGRESS:
-						updateProgress(uploader.getProgress(), mediaFile.length());
-						break;
-					case MEDIA_COMPLETE:
-						updateProgress(uploader.getProgress(), mediaFile.length());
-						System.out.println(ANSI_BOLD + ANSI_BLUE + "\n==>" + ANSI_GREEN + " Upload is complete!" + ANSI_RESET);
-						//System.out.println("Upload is complete!");
-				}
-			}
-		}
 
 		// File's metadata.
 		File fileMetadata = new File();
@@ -226,7 +151,7 @@ public class GoogleDriveAPI {
 		mediaContent.setLength(mediaFile.length());
 		try {
 			Drive.Files.Create request = drive.files().create(fileMetadata, mediaContent);
-			request.getMediaHttpUploader().setProgressListener(new CustomProgressListener());
+			request.getMediaHttpUploader().setProgressListener(new FileUploadProgressListener(fileName, mediaFile));
 			request.execute();
 
 		// Uncomment the following line to print the File ID.
@@ -320,9 +245,9 @@ public class GoogleDriveAPI {
 	}
 
 	private static List<File> md5Preprocessor(List<File> files, String input) {
-		List<String> md5s1 = Arrays.asList(input.split(" "));
+		List<String> md5s1 = Arrays.asList(input.split(" "));	//stage 1, split it by space
 		List<File> fileList = new ArrayList<File>();
-		for (String md5s2 : md5s1) {
+		for (String md5s2 : md5s1) {	//stage 1, make sure every item is s single md5 value
 			if (!md5s2.contains("-")) {	//not a range
 				fileList.addAll(md5sToFileList(files, md5s2, md5s2));
 			} else {
@@ -334,13 +259,12 @@ public class GoogleDriveAPI {
 	}
 
 	private static void printAbout(Drive drive) throws IOException, NullPointerException {
-		System.out.println(ANSI_BOLD + ANSI_BLUE);
 		About about = drive.about().get()
 			.setFields("storageQuota")
 			.execute();
 
-		About.StorageQuota aStorageQuota = about.getStorageQuota();
-		System.out.printf("Quota: %.1f/%.1fGB" + ANSI_RESET + '\n', (double)aStorageQuota.getUsage()/1024/1024/1024, (double)aStorageQuota.getLimit()/1024/1024/1024);
+		About.StorageQuota storageQuota = about.getStorageQuota();
+		System.out.printf(ANSI_BOLD + ANSI_BLUE + "Quota: %.1f/%.1fGB" + ANSI_RESET + '\n', (double)storageQuota.getUsage()/1024/1024/1024, (double)storageQuota.getLimit()/1024/1024/1024);
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -362,7 +286,7 @@ public class GoogleDriveAPI {
 					downloadFiles(drive, dowFileList);
 				} else {
 					//Remove
-					System.out.println(ANSI_BOLD + ANSI_BLUE + "==> Enter MD5 to " + ANSI_RED + "REMOVE " + ANSI_BLUE + "file (Ctrl-C to exit): " + ANSI_RESET);
+					System.out.println(ANSI_BOLD + ANSI_RED + "==> Enter MD5 to REMOVE file (Ctrl-C to exit): " + ANSI_RESET);
 					String md5Checksum = scanner.next();
 					List<File> delFileList = md5Preprocessor(files, md5Checksum);
 					//List<File> delFileList = md5ToFileList(files, md5Checksum);

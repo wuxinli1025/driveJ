@@ -286,7 +286,7 @@ public class GoogleDriveAPI {
 					downloadFiles(drive, dowFileList);
 				} else {
 					//Remove
-					System.out.println(ANSI_BOLD + ANSI_RED + "==> Enter MD5 to REMOVE file (Ctrl-C to exit): " + ANSI_RESET);
+					System.out.println(ANSI_BOLD + ANSI_RED + "==> Enter MD5(s) to PURGE file(s) (Ctrl-C to exit): " + ANSI_RESET);
 					String md5Checksum = scanner.next();
 					List<File> delFileList = md5Preprocessor(files, md5Checksum);
 					//List<File> delFileList = md5ToFileList(files, md5Checksum);

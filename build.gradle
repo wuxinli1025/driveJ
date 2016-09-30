@@ -22,13 +22,13 @@ repositories {
 dependencies {
     compile 'com.google.api-client:google-api-client:1.22.0'
     compile 'com.google.oauth-client:google-oauth-client-jetty:1.22.0'
-    compile 'com.google.apis:google-api-services-drive:v3-rev42-1.22.0'
+    compile 'com.google.apis:google-api-services-drive:v3-rev44-1.22.0'
 }
 
 run{
     standardInput = System.in
     if ( project.hasProperty("arg") ) {
-        args(arg.split(','))
+        args(arg.split(';'))
     }
 }
 

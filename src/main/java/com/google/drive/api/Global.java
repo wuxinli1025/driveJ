@@ -35,9 +35,10 @@ public class Global {
         }
         progressBar.append('╟');
         System.out.printf("\r%s  %.2f%%", progressBar.toString(), progress * 100);
-        System.out.printf(ANSI_BOLD + ANSI_BLUE + " %.2f/%.2fMB " + ANSI_RESET, (double)progress*size/1024/1024, (double)size/1024/1024);
         if (percentage == 100) {
-            System.out.printf("☕️" + ANSI_BOLD + ANSI_GREEN + " Done!\n" + ANSI_RESET, (double)progress*size/1024/1024, (double)size/1024/1024);
+            System.out.printf(" ☕️" + ANSI_BOLD + ANSI_GREEN + " Mission Accomplished!" + ANSI_RESET, (double)progress*size/1024/1024, (double)size/1024/1024);
+        } else {
+            System.out.printf(ANSI_BOLD + ANSI_BLUE + " %.2f/%.2fMB" + ANSI_RESET, (double)progress*size/1024/1024, (double)size/1024/1024);
         }
     }
 }

@@ -19,7 +19,7 @@ public class FileDownloadProgressListener implements MediaHttpDownloaderProgress
                 break;
             case MEDIA_COMPLETE:
                 Global.updateProgress(downloader.getProgress(), size);
-                //System.out.println(Global.ANSI_BOLD + Global.ANSI_BLUE + "\n==>" + Global.ANSI_GREEN + " Download is complete!" + Global.ANSI_RESET);
+                System.out.print('\n');
         }
     }
 }

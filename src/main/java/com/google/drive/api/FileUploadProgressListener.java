@@ -30,7 +30,7 @@ public class FileUploadProgressListener implements MediaHttpUploaderProgressList
                 break;
             case MEDIA_COMPLETE:
                 Global.updateProgress(uploader.getProgress(), mediaFile.length());
-                //System.out.println(Global.ANSI_BOLD + Global.ANSI_BLUE + "\n==>" + Global.ANSI_GREEN + " Upload is complete!" + Global.ANSI_RESET);
+                System.out.print('\n');
         }
     }
 }

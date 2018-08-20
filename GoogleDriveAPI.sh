@@ -1,5 +1,5 @@
 #!/bin/bash
-homeAPI=/Users/Ryan7WU/driveAPI/
+homeAPI=/Users/Ryan7WU/projects/driveJ/
 pwd=`pwd`/
 
 PUT() {

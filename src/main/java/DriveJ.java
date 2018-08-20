@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -51,17 +52,18 @@ public class DriveJ {
 
     /** DOWNLOADS_PATH, where you want to save the downloaded files in. */
     private static final String DOWNLOADS_PATH = Global.DOWNLOADS_PATH;
+    private static final String AUTH_PATH = System.getProperty("user.home") + "/.credentials/driveJ/";
 
-    private static final String APPLICATION_NAME = "Google Drive API Java Quickstart";
+    private static final String APPLICATION_NAME = "driveJ";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
-    private static final String TOKENS_DIRECTORY_PATH = "tokens";
+    private static final String TOKENS_DIRECTORY_PATH = AUTH_PATH + "tokens";
 
     /**
      * Global instance of the scopes required by this quickstart. If modifying these
      * scopes, delete your previously saved credentials/ folder.
      */
     private static final List<String> SCOPES = Collections.singletonList(DriveScopes.DRIVE);
-    private static final String CREDENTIALS_FILE_PATH = "credentials.json";
+    private static final String CREDENTIALS_FILE_PATH = "/Users/Ryan7WU/.credentials/driveJ/credentials.json";
 
     /**
      * Creates an authorized Credential object.
@@ -72,7 +74,8 @@ public class DriveJ {
      */
     private static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws IOException {
         // Load client secrets.
-        InputStream in = DriveJ.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
+        // InputStream in = DriveJ.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
+        InputStream in = new FileInputStream(CREDENTIALS_FILE_PATH);
         GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
         // Build flow and trigger user authorization request.
@@ -233,6 +236,7 @@ public class DriveJ {
     }
 
     public static void main(String... args) throws IOException, GeneralSecurityException {
+        System.out.println(System.getProperty("user.home"));
         // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         Drive drive = getDriveService(HTTP_TRANSPORT);

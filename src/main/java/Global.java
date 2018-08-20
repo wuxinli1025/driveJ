@@ -12,7 +12,8 @@ public class Global {
     public static final String ANSI_WHITE = "\u001B[37m";
 
     /** Configuration. */
-    public static final String DOWNLOADS_PATH = "/Users/Ryan7WU/Downloads/";
+    public static final String DOWNLOADS_PATH = System.getProperty("user.home") + "/Downloads/";
+    public static final String AUTH_PATH = System.getProperty("user.home") + "/.credentials/driveJ/";
 
     public static void updateProgress(double progress, long size) {
         // System.out.print(Global.ANSI_BOLD);

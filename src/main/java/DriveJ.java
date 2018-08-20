@@ -13,12 +13,8 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.*;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
-import java.util.List;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -52,7 +48,7 @@ public class DriveJ {
 
     /** DOWNLOADS_PATH, where you want to save the downloaded files in. */
     private static final String DOWNLOADS_PATH = Global.DOWNLOADS_PATH;
-    private static final String AUTH_PATH = System.getProperty("user.home") + "/.credentials/driveJ/";
+    private static final String AUTH_PATH = Global.AUTH_PATH;
 
     private static final String APPLICATION_NAME = "driveJ";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
@@ -63,7 +59,7 @@ public class DriveJ {
      * scopes, delete your previously saved credentials/ folder.
      */
     private static final List<String> SCOPES = Collections.singletonList(DriveScopes.DRIVE);
-    private static final String CREDENTIALS_FILE_PATH = "/Users/Ryan7WU/.credentials/driveJ/credentials.json";
+    private static final String CREDENTIALS_FILE_PATH = AUTH_PATH + "credentials.json";
 
     /**
      * Creates an authorized Credential object.
@@ -86,7 +82,7 @@ public class DriveJ {
         return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
     }
 
-    public static Drive getDriveService(final NetHttpTransport HTTP_TRANSPORT) throws IOException {
+    private static Drive getDriveService(final NetHttpTransport HTTP_TRANSPORT) throws IOException {
         return new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
                 .setApplicationName(APPLICATION_NAME).build();
     }

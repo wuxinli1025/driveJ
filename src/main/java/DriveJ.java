@@ -232,7 +232,6 @@ public class DriveJ {
     }
 
     public static void main(String... args) throws IOException, GeneralSecurityException {
-        System.out.println(System.getProperty("user.home"));
         // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         Drive drive = getDriveService(HTTP_TRANSPORT);
